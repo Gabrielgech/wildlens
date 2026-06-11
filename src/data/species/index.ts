@@ -24,4 +24,28 @@ export function getSpeciesById(id: string) {
   return SPECIES_DB.find(s => s.id === id)
 }
 
+export function getSpeciesByZone(zoneId: string) {
+  const zoneTypeById: Record<string, string> = {
+    calakmul: 'selva',
+    laguna_terminos: 'humedal',
+    ciudad_campeche: 'costa',
+    hopelchen: 'selva',
+    champoton: 'costa'
+  }
+
+  const type = zoneTypeById[zoneId] || 'selva'
+  const keywords: Record<string, string[]> = {
+    selva: ['selva', 'jungla', 'bosque', 'mangle', 'maya'],
+    costa: ['costa', 'mar', 'playa', 'laguna', 'río', 'rio'],
+    humedal: ['humedal', 'laguna', 'pantano', 'mangle'],
+    sabana: ['sabana', 'pastizal', 'pradera']
+  }
+
+  const terms = keywords[type] ?? [type]
+  return FAUNA.filter(species => {
+    const habitat = (species.habitat || '').toLowerCase()
+    return terms.some(term => habitat.includes(term))
+  })
+}
+
 export default SPECIES_DB

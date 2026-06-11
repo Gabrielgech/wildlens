@@ -1,7 +1,10 @@
-import React from 'react'
+import React, { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Leaf, Camera, PawPrint, Mic, WifiOff, ArrowRight } from 'lucide-react'
+import { Leaf, Camera, PawPrint, Mic, ArrowRight } from 'lucide-react'
 import BottomNav from '../../components/Navigation/BottomNav'
+import LocationBadge from '../../components/LocationBadge'
+import LocationSelector from '../../components/LocationSelector'
+import { LocationContext } from '../../context/LocationContext'
 
 const cards = [
   {
@@ -46,6 +49,9 @@ function FeatureCard({ title, desc, Icon, to }: { title: string; desc: string; I
 }
 
 export default function Home() {
+  const { zone, hasGPS, setZone, refreshLocation } = useContext(LocationContext)
+  const [selectorOpen, setSelectorOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-background px-4 pb-24 pt-6 text-textLight">
       <section className="relative overflow-hidden rounded-[28px] border border-[#2D6A4F]/50 bg-[#16213E] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.35)]">
@@ -60,12 +66,29 @@ export default function Home() {
               <p className="mt-1 text-base italic text-[#E8F5E9]/90">Nature speaks. WildLens listens.</p>
             </div>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#0f172a] px-4 py-2 text-sm text-[#cbd5e1] ring-1 ring-[#2D6A4F]/20">
-            <WifiOff className="h-4 w-4 text-[#52B788]" />
-            Campeche, México · Offline Ready
+          <div className="flex flex-wrap items-center gap-3">
+            <LocationBadge zone={zone} hasGPS={hasGPS} onClick={() => setSelectorOpen(true)} />
+            {zone ? (
+              <span className="rounded-full bg-white/5 px-4 py-2 text-sm text-textLight">Zona actual: {zone.name}</span>
+            ) : null}
           </div>
         </div>
       </section>
+      {selectorOpen ? (
+        <LocationSelector
+          currentZone={zone}
+          hasGPS={hasGPS}
+          onUseGPS={() => {
+            setSelectorOpen(false)
+            refreshLocation()
+          }}
+          onSelect={selectedZone => {
+            setZone(selectedZone)
+            setSelectorOpen(false)
+          }}
+          onClose={() => setSelectorOpen(false)}
+        />
+      ) : null}
 
       <main className="mt-8 grid gap-4 sm:grid-cols-2">
         {cards.map(card => (
