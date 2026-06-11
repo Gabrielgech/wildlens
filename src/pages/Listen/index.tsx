@@ -3,7 +3,9 @@ import AudioVisualizer from '../../components/AudioVisualizer'
 import FieldCard from '../../components/FieldCard'
 import { useAudioClassifier } from '../../hooks/useAudioClassifier'
 import { useAudioRecorder } from '../../hooks/useAudioRecorder'
+import { getManualSelectionList } from '../../data/species'
 import type { Species } from '../../types'
+import { ChevronDown } from 'lucide-react'
 
 export default function Listen() {
   const {
@@ -17,9 +19,11 @@ export default function Listen() {
     error
   } = useAudioRecorder()
   const { analyzeAudio } = useAudioClassifier()
-  const [results, setResults] = useState<{ species: Species; confidence: number; reasoning: string }[] | null>(null)
+  const [results, setResults] = useState<{ species: Species; confidence: number; reasoning: string; suggestManualSelection?: boolean }[] | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null)
+  const [showManualSelection, setShowManualSelection] = useState(false)
+  const [manualSearchQuery, setManualSearchQuery] = useState('')
 
   const canAnalyze = Boolean(audioBlob && frequencyData && !isRecording)
 

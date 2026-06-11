@@ -6,6 +6,7 @@ export interface MatchResult {
   species: Species
   confidence: number
   reasoning: string
+  suggestManualSelection?: boolean
 }
 
 function getDominantIndex(data: Uint8Array) {
@@ -78,67 +79,157 @@ export function useAudioClassifier() {
     const rhythmScore = getRhythmScore(frequencyData)
 
     const results: MatchResult[] = []
-    const birdCandidates = pickSpecies(['guacamaya', 'tucán', 'flamenco', 'pavo'])
-    const mammalCandidates = pickSpecies(['jaguar', 'tapir', 'coati', 'pecari'])
-    const reptileCandidates = pickSpecies(['cocodrilo', 'nauyaca', 'iguana'])
+    let confidence = 0
+    let suggestManualSelection = false
 
-    if (highFreqRatio > 0.25 && rhythmScore > 0.5) {
-      birdCandidates.slice(0, 3).forEach((species, index) => {
-        results.push({
-          species,
-          confidence: Math.max(30, Math.round(75 - index * 12 - averageAmplitude * 0.05)),
-          reasoning: `Alta presencia de frecuencias agudas y patrón rítmico sugiere aves como ${species.commonName}.`
-        })
-      })
-    } else if (averageAmplitude > 120 && dominantIndex < frequencyData.length * 0.2) {
-      mammalCandidates.slice(0, 3).forEach((species, index) => {
-        results.push({
-          species,
-          confidence: Math.max(35, Math.round(70 - index * 10 + (averageAmplitude - 120) * 0.2)),
-          reasoning: `Baja frecuencia y gran amplitud indican posibles mamíferos grandes como ${species.commonName}.`
-        })
-      })
-    } else if (highFreqRatio > 0.55 && rhythmScore < 0.4) {
-      const insect = FAUNA.find(species => species.commonName?.toLowerCase().includes('ig') || species.scientificName?.toLowerCase().includes('ig'))
-      if (insect) {
-        results.push({
-          species: insect,
-          confidence: 55,
-          reasoning: 'Frecuencias muy altas y cambios rápidos sugieren animales más pequeños o reptiles de alta tonalidad.'
-        })
-      }
-      chooseByCategory('reptile', 2).forEach((species, index) => {
-        results.push({
-          species,
-          confidence: Math.max(30, 50 - index * 8),
-          reasoning: `Frecuencia media y cambios rápidos pueden corresponder a ${species.commonName}.`
-        })
-      })
-    } else {
-      const mediumCandidates = [...birdCandidates, ...reptileCandidates].slice(0, 3)
-      mediumCandidates.forEach((species, index) => {
-        results.push({
-          species,
-          confidence: Math.max(25, Math.round(60 - index * 10)),
-          reasoning: `Patrón sonoro de frecuencia media sugiere ${species.commonName}.`
-        })
-      })
-    }
+    /**
+     * Frequency range analysis:
+     * dominantIndex > 200 (very high freq): insects, small creatures
+     * dominantIndex 100-200 (high freq): small to medium birds
+     * dominantIndex 50-100 (medium freq): medium birds/amphibians
+     * dominantIndex 20-50 (low-medium): large birds, medium mammals
+     * dominantIndex < 20 (very low): large mammals
+     */
 
-    if (results.length < 3) {
-      chooseByCategory('bird', 3).forEach(species => {
-        if (!results.some(item => item.species.id === species.id)) {
+    // Very high frequency: likely insects or very small creatures
+    if (dominantIndex > 200 && highFreqRatio > 0.6) {
+      const insectCandidates = FAUNA.filter(s => 
+        s.category === 'insect' || 
+        s.commonName?.toLowerCase().includes('insecto') ||
+        s.commonName?.toLowerCase().includes('rana')
+      )
+      if (insectCandidates.length > 0) {
+        insectCandidates.slice(0, 3).forEach((species, index) => {
           results.push({
             species,
-            confidence: 35,
-            reasoning: 'Si no hay coincidencias claras, se sugiere un ave común de Campeche.'
+            confidence: Math.round(55 - index * 15 + Math.random() * 10),
+            reasoning: 'Frecuencias muy altas sugieren animales pequeños como insectos o ranas.'
           })
-        }
-      })
+        })
+        confidence = results[0]?.confidence ?? 0
+      }
     }
 
-    return results.slice(0, 3)
+    // High frequency (100-200): small to medium birds (guacamaya, tucán, Amazona)
+    if (dominantIndex >= 100 && dominantIndex <= 200 && rhythmScore > 0.4) {
+      const smallBirdCandidates = pickSpecies(['guacamaya', 'Ara', 'tucán', 'Ramphastos', 'Amazona'])
+      if (smallBirdCandidates.length === 0) {
+        const birdCandidates = chooseByCategory('bird', 3)
+        birdCandidates.forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(70 - index * 12 + Math.random() * 10),
+            reasoning: 'Frecuencias altas y patrón rítmico sugieren aves pequeñas a medianas.'
+          })
+        })
+      } else {
+        smallBirdCandidates.slice(0, 3).forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(75 - index * 12 + Math.random() * 8),
+            reasoning: `Patrón característico de ${species.commonName}`
+          })
+        })
+      }
+      confidence = results[0]?.confidence ?? 0
+    }
+
+    // Medium frequency (50-100): medium birds, amphibians (Phoenicopterus, Meleagris, tree frogs)
+    if (dominantIndex >= 50 && dominantIndex < 100 && rhythmScore > 0.3) {
+      const mediumBirdCandidates = pickSpecies(['flamenco', 'Phoenicopterus', 'pavo', 'Meleagris', 'rana', 'tree frog'])
+      if (mediumBirdCandidates.length === 0) {
+        const mixed = [...chooseByCategory('bird', 2), ...chooseByCategory('amphibian', 1)]
+        mixed.forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(65 - index * 10 + Math.random() * 10),
+            reasoning: 'Frecuencias medias sugieren aves medianas o anfibios.'
+          })
+        })
+      } else {
+        mediumBirdCandidates.slice(0, 3).forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(70 - index * 12 + Math.random() * 10),
+            reasoning: `Sonido caracterísico de ${species.commonName}`
+          })
+        })
+      }
+      confidence = results[0]?.confidence ?? 0
+    }
+
+    // Low-medium frequency (20-50): large birds, medium mammals (Jabiru, coati, peccary)
+    if (dominantIndex >= 20 && dominantIndex < 50) {
+      const largeBirdCandidates = pickSpecies(['Jabiru', 'cigüeña', 'stork', 'coati', 'coatí', 'pecari', 'peccary'])
+      if (largeBirdCandidates.length === 0) {
+        const mixed = [...chooseByCategory('bird', 1), ...chooseByCategory('mammal', 2)]
+        mixed.forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(68 - index * 10 + Math.random() * 12),
+            reasoning: 'Frecuencias bajas indican aves grandes o mamíferos medianos.'
+          })
+        })
+      } else {
+        largeBirdCandidates.slice(0, 3).forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(72 - index * 12 + Math.random() * 10),
+            reasoning: `Patrón sonoro típico de ${species.commonName}`
+          })
+        })
+      }
+      confidence = results[0]?.confidence ?? 0
+    }
+
+    // Very low frequency < 20: large mammals (tapir, jaguar - rare to hear)
+    if (dominantIndex < 20 && averageAmplitude > 80) {
+      const largeMammalCandidates = pickSpecies(['tapir', 'jaguar', 'puma', 'león', 'large mammal'])
+      if (largeMammalCandidates.length === 0) {
+        const mammalCandidates = chooseByCategory('mammal', 3)
+        mammalCandidates.forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(60 - index * 12 + Math.random() * 15),
+            reasoning: 'Frecuencias muy bajas sugieren mamíferos grandes, muy raros de escuchar.'
+          })
+        })
+      } else {
+        largeMammalCandidates.slice(0, 3).forEach((species, index) => {
+          results.push({
+            species,
+            confidence: Math.round(65 - index * 12 + Math.random() * 12),
+            reasoning: `Vocalización característica de ${species.commonName}`
+          })
+        })
+      }
+      confidence = results[0]?.confidence ?? 0
+    }
+
+    // Fallback: if no clear classification
+    if (results.length === 0) {
+      const randomSpecies = chooseByCategory('bird', 3)
+      randomSpecies.forEach((species, index) => {
+        results.push({
+          species,
+          confidence: Math.round(40 - index * 8),
+          reasoning: 'El sonido no es suficientemente claro para identificación precisa.'
+        })
+      })
+      suggestManualSelection = true
+    }
+
+    // Mark for manual selection if confidence too low
+    if (confidence < 40) {
+      suggestManualSelection = true
+    }
+
+    return results.slice(0, 3).map(r => ({
+      ...r,
+      suggestManualSelection
+    }))
   }, [])
 
   return { analyzeAudio }
 }
+

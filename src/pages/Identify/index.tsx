@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useCamera } from '../../hooks/useCamera'
 import { useImageClassifier } from '../../hooks/useImageClassifier'
-import { FLORA, FAUNA, ECOSYSTEMS, getSpeciesById } from '../../data/species'
+import { FLORA, FAUNA, ECOSYSTEMS, getSpeciesById, getManualSelectionList } from '../../data/species'
 import type { Species } from '../../types'
 import FieldCard from '../../components/FieldCard'
 import Button from '../../components/ui/Button'
@@ -13,7 +13,8 @@ import {
   Leaf,
   Mountain,
   PawPrint,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown
 } from 'lucide-react'
 
 const tabs = [
@@ -31,6 +32,8 @@ export default function Identify() {
   const [classifyResult, setClassifyResult] = useState<any>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [journalMessage, setJournalMessage] = useState<string | null>(null)
+  const [showManualSelection, setShowManualSelection] = useState(false)
+  const [manualSearchQuery, setManualSearchQuery] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const { videoRef, startCamera, stopCamera, capturePhoto, hasPermission, error, isLoading: cameraLoading } = useCamera()
   const { classify, isModelLoading, modelError } = useImageClassifier()
@@ -172,23 +175,46 @@ export default function Identify() {
 
         <div className="relative overflow-hidden rounded-[24px] border border-[#C8E6C9] bg-[#F1F8E9] p-3">
           {photoSrc ? (
-            <img src={photoSrc} alt="Preview" className="h-full w-full rounded-[20px] object-cover" />
+            <>
+              <img src={photoSrc} alt="Preview" className="h-72 w-full rounded-[20px] object-cover" />
+              <Button
+                variant="primary"
+                size="md"
+                className="absolute bottom-4 right-4"
+                onClick={handleCapture}
+                disabled={isAnalyzing || isModelLoading}
+              >
+                Analizar
+              </Button>
+            </>
           ) : (
-            <div className="relative overflow-hidden rounded-[20px] border border-[#C8E6C9] bg-[#E8F5E9] p-2">
-              <video ref={videoRef} className="h-72 w-full rounded-[20px] bg-[#F1F8E9] object-cover" muted playsInline />
-              {!hasPermission && !cameraLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-center text-sm text-[#1A3326]">
-                  <div>
-                    <p>Permite el uso de cámara para ver el visor.</p>
-                    <Button variant="secondary" size="sm" onClick={startCamera}>
-                      Iniciar cámara
-                    </Button>
+            <div className="flex h-72 items-center justify-center rounded-[20px] border-2 border-dashed border-[#C8E6C9] bg-white">
+              <div className="text-center">
+                {!hasPermission && !cameraLoading ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <Camera className="h-12 w-12 text-[#2D6A4F]" />
+                    <p className="text-sm font-medium text-[#1A3326]">Permite el uso de cámara</p>
+                    <p className="text-xs text-[#4A7C59]">o sube una foto para identificar</p>
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="primary" size="sm" onClick={startCamera}>
+                        Usar cámara
+                      </Button>
+                      <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        Subir foto
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ) : null}
-              {cameraLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/70 text-white">Cargando cámara...</div>
-              ) : null}
+                ) : cameraLoading ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C8E6C9] border-t-[#2D6A4F]" />
+                    <p className="text-sm text-[#4A7C59]">Iniciando cámara...</p>
+                  </div>
+                ) : (
+                  <div className="flex h-full items-center justify-center">
+                    <video ref={videoRef} className="h-full w-full rounded-[20px] bg-[#E8F5E9] object-cover" muted playsInline />
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -202,7 +228,7 @@ export default function Identify() {
         <div className="field-card flex items-center justify-center p-10 text-sm text-[#4A7C59]">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#2D6A4F] border-[#E8F5E9]" />
-            Cargando modelo de IA...
+            Preparando IA local... (solo la primera vez)
           </div>
         </div>
       ) : isAnalyzing ? (
@@ -334,16 +360,71 @@ export default function Identify() {
             </div>
           ) : null}
 
-          <div className="rounded-2xl bg-[#0f172a] p-4 text-sm text-[#94a3b8]">
-            ⚠️ Identificación asistida por IA. Verifica con expertos locales.
+          <div className="rounded-2xl bg-[#E8F5E9] p-4 border border-[#C8E6C9]">
+            <p className="text-sm text-[#2D6A4F]">
+              🔬 <strong>Identificación asistida por IA</strong> · Precisión estimada basada en características visuales generales
+            </p>
           </div>
+
+          {classifyResult?.suggestManualSelection ? (
+            <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
+              <p className="text-sm font-medium text-[#D97706]">¿No es correcto? Selecciona manualmente de nuestra base de datos.</p>
+            </div>
+          ) : null}
 
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="primary" size="md" onClick={saveJournal}>
               Guardar en diario
             </Button>
-            {journalMessage ? <p className="text-sm text-[#94a3b8]">{journalMessage}</p> : null}
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setShowManualSelection(!showManualSelection)}
+              icon={<ChevronDown className={`h-4 w-4 transition-transform ${showManualSelection ? 'rotate-180' : ''}`} />}
+            >
+              Seleccionar manualmente
+            </Button>
+            {journalMessage ? <p className="text-sm text-[#4A7C59]">{journalMessage}</p> : null}
           </div>
+
+          {showManualSelection ? (
+            <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
+              <h4 className="font-semibold text-[#1A3326] mb-3">Buscar especie</h4>
+              <input
+                type="text"
+                placeholder="Buscar por nombre común o científico..."
+                value={manualSearchQuery}
+                onChange={(e) => setManualSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-[#C8E6C9] bg-white px-3 py-2 text-[#1A3326] placeholder-[#4A7C59] focus:outline-none focus:ring-2 focus:ring-[#2D6A4F]"
+              />
+              <div className="mt-3 max-h-96 space-y-2 overflow-y-auto">
+                {getManualSelectionList('fauna')
+                  .filter(s =>
+                    !manualSearchQuery ||
+                    (s.commonName || '').toLowerCase().includes(manualSearchQuery.toLowerCase()) ||
+                    (s.scientificName || '').toLowerCase().includes(manualSearchQuery.toLowerCase())
+                  )
+                  .slice(0, 20)
+                  .map((species) => (
+                    <button
+                      key={species.id}
+                      onClick={() => {
+                        setClassifyResult({
+                          ...classifyResult,
+                          results: [{ species, confidence: 100, reason: 'Selección manual' }, ...classifyResult.results.slice(1)]
+                        })
+                        setShowManualSelection(false)
+                        setManualSearchQuery('')
+                      }}
+                      className="w-full rounded-lg bg-white p-2 text-left transition-colors hover:bg-[#E8F5E9]"
+                    >
+                      <p className="font-medium text-[#1A3326]">{species.commonName}</p>
+                      <p className="text-xs text-[#4A7C59]">{species.scientificName}</p>
+                    </button>
+                  ))}
+              </div>
+            </div>
+          ) : null}
         </section>
       ) : null}
     </div>

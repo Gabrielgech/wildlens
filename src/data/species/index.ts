@@ -48,4 +48,17 @@ export function getSpeciesByZone(zoneId: string) {
   })
 }
 
+/**
+ * Get all species for manual selection, filtered by mode (fauna/flora)
+ * Sorted alphabetically by common name
+ */
+export function getManualSelectionList(mode: 'fauna' | 'flora'): Species[] {
+  const list = mode === 'fauna' ? FAUNA : FLORA
+  return list.sort((a, b) => {
+    const nameA = (a.commonName || a.scientificName || '').toLowerCase()
+    const nameB = (b.commonName || b.scientificName || '').toLowerCase()
+    return nameA.localeCompare(nameB)
+  })
+}
+
 export default SPECIES_DB
