@@ -35,14 +35,14 @@ const cards = [
 
 function FeatureCard({ title, desc, Icon, to }: { title: string; desc: string; Icon: React.ComponentType<{ className?: string }>; to: string }) {
   return (
-    <Link to={to} className="field-card group flex min-h-[180px] flex-col justify-between transition duration-200 hover:-translate-y-1 hover:border-[#52B788]/60">
+    <Link to={to} className="field-card group flex min-h-[180px] flex-col justify-between transition duration-200 hover:-translate-y-1 hover:border-[#2D6A4F] border-l-4 border-l-[#2D6A4F]">
       <div>
-        <Icon className="h-12 w-12 text-[#52B788]" />
-        <h3 className="mt-4 text-xl font-bold text-white">{title}</h3>
-        <p className="mt-2 text-sm text-[#94a3b8]">{desc}</p>
+        <Icon className="h-12 w-12 text-[#2D6A4F]" />
+        <h3 className="mt-4 text-xl font-bold text-[#1A3326]">{title}</h3>
+        <p className="mt-2 text-sm text-[#4A7C59]">{desc}</p>
       </div>
-      <div className="flex items-center justify-end text-[#94a3b8]">
-        <ArrowRight className="h-5 w-5 transition group-hover:text-[#52B788]" />
+      <div className="flex items-center justify-end text-[#4A7C59]">
+        <ArrowRight className="h-5 w-5 transition group-hover:text-[#2D6A4F]" />
       </div>
     </Link>
   )
@@ -54,22 +54,21 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background px-4 pb-24 pt-6 text-textLight">
-      <section className="relative overflow-hidden rounded-[28px] border border-[#2D6A4F]/50 bg-[#16213E] p-6 shadow-[0_32px_80px_rgba(0,0,0,0.35)]">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#2D6A4F]/20 via-transparent to-[#1A1A2E]/80" />
+      <section className="relative overflow-hidden rounded-[28px] border border-[#C8E6C9] bg-gradient-to-br from-[#E8F5E9] to-[#F8FBF0] p-6 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
         <div className="relative flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#2D6A4F]/20 text-[#52B788]">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#E8F5E9] text-[#2D6A4F]">
               <Leaf className="h-8 w-8" />
             </div>
             <div>
-              <h1 className="text-[32px] font-bold text-[#52B788]">WildLens</h1>
-              <p className="mt-1 text-base italic text-[#E8F5E9]/90">Nature speaks. WildLens listens.</p>
+              <h1 className="text-[32px] font-bold text-[#2D6A4F]">WildLens</h1>
+              <p className="mt-1 text-base italic text-[#4A7C59]">Nature speaks. WildLens listens.</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <LocationBadge zone={zone} hasGPS={hasGPS} onClick={() => setSelectorOpen(true)} />
             {zone ? (
-              <span className="rounded-full bg-white/5 px-4 py-2 text-sm text-textLight">Zona actual: {zone.name}</span>
+              <span className="rounded-full bg-[#E8F5E9] px-4 py-2 text-sm text-[#2D6A4F] font-medium">Zona actual: {zone.name}</span>
             ) : null}
           </div>
         </div>
@@ -96,7 +95,7 @@ export default function Home() {
         ))}
       </main>
 
-      <footer className="mt-8 flex flex-col gap-2 text-sm text-[#94a3b8]">
+      <footer className="mt-8 flex flex-col gap-2 text-sm text-[#4A7C59]">
         <p>Base de datos: 12 fauna · 8 flora · 4 ecosistemas</p>
         <p>v0.1.0 · Powered by Foundry IQ</p>
       </footer>

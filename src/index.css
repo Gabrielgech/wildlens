@@ -15,8 +15,8 @@ html, body, #root {
 body {
   @apply bg-background text-textLight;
   font-family: 'Inter', sans-serif;
-  background: #1A1A2E;
-  color: #E8F5E9;
+  background: #F8FBF0;
+  color: #1A3326;
 }
 
 ::-webkit-scrollbar {
@@ -25,21 +25,22 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(22, 33, 62, 0.8);
+  background: #F1F8E9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #2D6A4F;
+  background: #C8E6C9;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52B788;
+  background: #2D6A4F;
 }
 
 .field-card {
-  background: #16213E;
-  border: 1px solid #2D6A4F;
+  background: #FFFFFF;
+  border: 1px solid #C8E6C9;
   border-radius: 16px;
   padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(45, 106, 79, 0.08);
 }

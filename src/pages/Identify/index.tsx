@@ -118,19 +118,19 @@ export default function Identify() {
 
   return (
     <div className="min-h-screen bg-background px-4 pb-32 pt-6 text-textLight">
-      <div className="mb-6 rounded-[28px] border border-[#2D6A4F]/50 bg-[#16213E]/80 p-4 shadow-[0_32px_80px_rgba(0,0,0,0.28)]">
+      <div className="mb-6 rounded-[28px] border border-[#C8E6C9] bg-white p-4 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#2D6A4F]/20 text-[#52B788]">
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#E8F5E9] text-[#2D6A4F]">
             <Leaf className="h-8 w-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#52B788]">WildLens Identify</h1>
-            <p className="mt-1 text-sm italic text-[#E8F5E9]/85">Usa la cámara para reconocer ecosistemas y especies con IA.</p>
+            <h1 className="text-2xl font-bold text-[#2D6A4F]">WildLens Identify</h1>
+            <p className="mt-1 text-sm italic text-[#4A7C59]">Usa la cámara para reconocer ecosistemas y especies con IA.</p>
           </div>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full bg-[#16213E] p-1 border border-[#2D6A4F]">
+      <div className="mb-6 flex flex-wrap gap-2 rounded-full bg-white p-1 border border-[#C8E6C9]">
         {tabs.map(tab => {
           const isActive = activeTab === tab.id
           const Icon = tab.icon
@@ -138,7 +138,7 @@ export default function Identify() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex min-w-[110px] items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${isActive ? 'bg-[#52B788]/15 text-[#52B788]' : 'text-[#94a3b8] hover:bg-white/5'}`}
+              className={`flex min-w-[110px] items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${isActive ? 'bg-[#E8F5E9] text-[#2D6A4F] border-b-2 border-[#2D6A4F]' : 'text-[#9E9E9E] hover:bg-[#F8FBF0]'}`}
             >
               <Icon className="h-5 w-5" />
               {tab.label}
@@ -150,8 +150,8 @@ export default function Identify() {
       <section className="field-card mb-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-white">Captura tu foto</h2>
-            <p className="text-sm text-[#94a3b8]">Selecciona cámara o sube una imagen para comenzar la identificación.</p>
+            <h2 className="text-xl font-semibold text-[#1A3326]">Captura tu foto</h2>
+            <p className="text-sm text-[#4A7C59]">Selecciona cámara o sube una imagen para comenzar la identificación.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" size="sm" icon={<Upload className="h-4 w-4" />} onClick={() => fileInputRef.current?.click()}>
@@ -170,14 +170,14 @@ export default function Identify() {
 
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
 
-        <div className="relative overflow-hidden rounded-[24px] border border-[#2D6A4F] bg-[#0f172a] p-3">
+        <div className="relative overflow-hidden rounded-[24px] border border-[#C8E6C9] bg-[#F1F8E9] p-3">
           {photoSrc ? (
             <img src={photoSrc} alt="Preview" className="h-full w-full rounded-[20px] object-cover" />
           ) : (
-            <div className="relative overflow-hidden rounded-[20px] border border-[#2D6A4F]/70 bg-[#0b1224] p-2">
-              <video ref={videoRef} className="h-72 w-full rounded-[20px] bg-black object-cover" muted playsInline />
+            <div className="relative overflow-hidden rounded-[20px] border border-[#C8E6C9] bg-[#E8F5E9] p-2">
+              <video ref={videoRef} className="h-72 w-full rounded-[20px] bg-[#F1F8E9] object-cover" muted playsInline />
               {!hasPermission && !cameraLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-center text-sm text-[#cbd5e1]">
+                <div className="absolute inset-0 flex items-center justify-center bg-white/60 text-center text-sm text-[#1A3326]">
                   <div>
                     <p>Permite el uso de cámara para ver el visor.</p>
                     <Button variant="secondary" size="sm" onClick={startCamera}>
@@ -194,21 +194,21 @@ export default function Identify() {
         </div>
 
         {(error || modelError) ? (
-          <div className="mt-3 rounded-2xl bg-[#941b0c] p-3 text-sm text-white">{error || modelError}</div>
+          <div className="mt-3 rounded-2xl bg-[#FFEBEE] p-3 text-sm text-[#E63946]">{error || modelError}</div>
         ) : null}
       </section>
 
       {isModelLoading ? (
-        <div className="field-card flex items-center justify-center p-10 text-sm text-[#94a3b8]">
+        <div className="field-card flex items-center justify-center p-10 text-sm text-[#4A7C59]">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#52B788] border-white" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#2D6A4F] border-[#E8F5E9]" />
             Cargando modelo de IA...
           </div>
         </div>
       ) : isAnalyzing ? (
-        <div className="field-card flex items-center justify-center p-10 text-sm text-[#94a3b8]">
+        <div className="field-card flex items-center justify-center p-10 text-sm text-[#4A7C59]">
           <div className="flex items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#52B788] border-white" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#2D6A4F] border-[#E8F5E9]" />
             Analizando imagen...
           </div>
         </div>
@@ -218,28 +218,28 @@ export default function Identify() {
             <div className="field-card">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#2D6A4F]/15 px-3 py-1 text-xs text-[#52B788]">Ecosistema detectado</div>
-                  <h3 className="mt-4 text-2xl font-bold text-white">{classifyResult.ecosystem?.name ?? 'Selva tropical'}</h3>
-                  <p className="mt-2 max-w-2xl text-sm text-[#cbd5e1]">{classifyResult.ecosystem?.description}</p>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-3 py-1 text-xs text-[#2D6A4F]">Ecosistema detectado</div>
+                  <h3 className="mt-4 text-2xl font-bold text-[#1A3326]">{classifyResult.ecosystem?.name ?? 'Selva tropical'}</h3>
+                  <p className="mt-2 max-w-2xl text-sm text-[#4A7C59]">{classifyResult.ecosystem?.description}</p>
                 </div>
-                <div className="rounded-3xl bg-[#0f172a] px-4 py-3 text-sm text-[#94a3b8]">Zona: {classifyResult.ecosystem?.zone}</div>
+                <div className="rounded-3xl bg-[#E8F5E9] px-4 py-3 text-sm text-[#2D6A4F] font-medium">Zona: {classifyResult.ecosystem?.zone}</div>
               </div>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-[#1f2744] p-4">
-                  <h4 className="text-sm font-semibold text-[#52B788]">Posibles especies en esta zona</h4>
+                <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
+                  <h4 className="text-sm font-semibold text-[#2D6A4F]">Posibles especies en esta zona</h4>
                   <div className="mt-4 space-y-3">
                    {(ecosystemSpecies.length ? ecosystemSpecies : commonFauna).slice(0, 4).map((species: Species) => (
-                      <div key={species.id} className="flex items-center justify-between rounded-2xl bg-[#16213E] p-3">
+                      <div key={species.id} className="flex items-center justify-between rounded-2xl bg-white p-3 border border-[#C8E6C9]">
                         <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#2D6A4F]/20 text-[#52B788]">•</span>
+                          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E8F5E9] text-[#2D6A4F]">•</span>
                           <div>
-                            <p className="font-semibold text-white">{species.commonName}</p>
-                            <p className="text-xs text-[#94a3b8]">{species.scientificName}</p>
+                            <p className="font-semibold text-[#1A3326]">{species.commonName}</p>
+                            <p className="text-xs text-[#4A7C59]">{species.scientificName}</p>
                           </div>
                         </div>
                         {species.isDangerous ? (
-                          <span className="rounded-full bg-[#E63946]/10 px-2 py-1 text-[11px] font-semibold text-[#E63946]">Peligro {species.dangerLevel}/5</span>
+                          <span className="rounded-full bg-[#FFEBEE] px-2 py-1 text-[11px] font-semibold text-[#E63946]">Peligro {species.dangerLevel}/5</span>
                         ) : null}
                       </div>
                     ))}
@@ -247,17 +247,17 @@ export default function Identify() {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-2xl bg-[#1f2744] p-4">
-                    <h4 className="text-sm font-semibold text-[#52B788]">Riesgos detectados</h4>
-                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#cbd5e1]">
+                  <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
+                    <h4 className="text-sm font-semibold text-[#F4A261]">Riesgos detectados</h4>
+                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#D97706]">
                       {(classifyResult.ecosystem?.risks ?? ['Riesgos no disponibles']).map((risk: string) => (
                         <li key={risk}>{risk}</li>
                       ))}
                     </ul>
                   </div>
-                  <div className="rounded-2xl bg-[#1f2744] p-4">
-                    <h4 className="text-sm font-semibold text-[#52B788]">Curiosidades</h4>
-                    <p className="mt-3 text-sm text-[#cbd5e1]">{classifyResult.ecosystem?.curiosities?.[0] ?? 'Información cultural local disponible.'}</p>
+                  <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
+                    <h4 className="text-sm font-semibold text-[#2D6A4F]">Curiosidades</h4>
+                    <p className="mt-3 text-sm text-[#4A7C59]">{classifyResult.ecosystem?.curiosities?.[0] ?? 'Información cultural local disponible.'}</p>
                   </div>
                   {classifyResult.ecosystem?.migratory?.length ? (
                     <div className="rounded-2xl bg-[#1f2744] p-4">

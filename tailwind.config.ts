@@ -5,13 +5,17 @@ export default {
     extend: {
       colors: {
         primary: '#2D6A4F',
-        secondary: '#8B5E3C',
-        background: '#1A1A2E',
-        surface: '#16213E',
-        textLight: '#E8F5E9',
+        secondary: '#52B788',
+        background: '#F8FBF0',
+        surface: '#FFFFFF',
+        textLight: '#1A3326',
+        textSecondary: '#4A7C59',
         accent: '#52B788',
         warning: '#F4A261',
-        danger: '#E63946'
+        danger: '#E63946',
+        border: '#C8E6C9',
+        lightGreen: '#E8F5E9',
+        lightRed: '#FFEBEE'
       }
     }
   },

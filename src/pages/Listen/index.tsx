@@ -46,21 +46,21 @@ export default function Listen() {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 bg-[#F8FBF0]">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-[0_28px_120px_rgba(0,0,0,0.22)]">
+        <div className="rounded-[2rem] border border-[#C8E6C9] bg-white p-6 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm uppercase tracking-[0.4em] text-accent/70">BioListen</p>
-              <h2 className="mt-2 text-3xl font-bold text-white">Detecta animales por su sonido</h2>
-              <p className="mt-3 max-w-2xl text-textLight/80">
+              <p className="text-sm uppercase tracking-[0.4em] text-[#2D6A4F]">BioListen</p>
+              <h2 className="mt-2 text-3xl font-bold text-[#1A3326]">Detecta animales por su sonido</h2>
+              <p className="mt-3 max-w-2xl text-[#4A7C59]">
                 Graba hasta 10 segundos de audio en el campo y deja que WildLens ofrezca posibles especies con base en patrones de frecuencia y ritmo.
               </p>
             </div>
-            <div className="rounded-3xl bg-[#111827] p-4 text-right sm:text-left">
-              <p className="text-sm text-textLight/70">Estado</p>
-              <p className="mt-1 text-xl font-semibold text-white">{isRecording ? 'Grabando' : audioBlob ? 'Listo para analizar' : 'Esperando grabación'}</p>
-              <p className="mt-2 text-sm text-textLight/80">{recordedLabel}</p>
+            <div className="rounded-3xl bg-[#E8F5E9] p-4 text-right sm:text-left border border-[#C8E6C9]">
+              <p className="text-sm text-[#4A7C59]">Estado</p>
+              <p className="mt-1 text-xl font-semibold text-[#2D6A4F]">{isRecording ? 'Grabando' : audioBlob ? 'Listo para analizar' : 'Esperando grabación'}</p>
+              <p className="mt-2 text-sm text-[#4A7C59]">{recordedLabel}</p>
             </div>
           </div>
         </div>
@@ -68,21 +68,21 @@ export default function Listen() {
         <AudioVisualizer frequencyData={frequencyData} isRecording={isRecording} />
 
         <div className="grid gap-4 lg:grid-cols-[1.4fr_0.9fr]">
-          <div className="rounded-3xl border border-border bg-surface p-6">
+          <div className="rounded-3xl border border-[#C8E6C9] bg-white p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white">Grabación de campo</h3>
-                <p className="mt-2 text-textLight/80">Usa el micrófono de tu dispositivo para capturar sonidos de fauna y analizar su firma acústica.</p>
+                <h3 className="text-xl font-bold text-[#1A3326]">Grabación de campo</h3>
+                <p className="mt-2 text-[#4A7C59]">Usa el micrófono de tu dispositivo para capturar sonidos de fauna y analizar su firma acústica.</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${isRecording ? 'bg-red-500 text-white hover:bg-red-400' : 'bg-emerald-500 text-black hover:bg-emerald-400'}`}
+                  className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${isRecording ? 'bg-[#E63946] text-white hover:bg-[#D62828]' : 'bg-[#52B788] text-white hover:bg-[#2D6A4F]'}`}
                   onClick={isRecording ? stopRecording : startRecording}
                 >
                   {isRecording ? 'Detener' : 'Iniciar grabación'}
                 </button>
                 <button
-                  className="rounded-3xl border border-white/10 bg-white/5 px-5 py-3 text-sm text-white transition hover:border-white/20"
+                  className="rounded-3xl border border-[#C8E6C9] bg-[#F1F8E9] px-5 py-3 text-sm text-[#2D6A4F] transition hover:border-[#2D6A4F]"
                   onClick={reset}
                 >
                   Reiniciar
@@ -91,13 +91,13 @@ export default function Listen() {
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl bg-[#111827] p-4">
-                <p className="text-sm uppercase tracking-[0.2em] text-textLight/70">Permiso</p>
-                <p className="mt-2 text-lg font-semibold text-white">{hasPermission ? 'Concedido' : 'No solicitado'}</p>
+              <div className="rounded-3xl bg-[#E8F5E9] p-4 border border-[#C8E6C9]">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#4A7C59]">Permiso</p>
+                <p className="mt-2 text-lg font-semibold text-[#2D6A4F]">{hasPermission ? 'Concedido' : 'No solicitado'}</p>
               </div>
-              <div className="rounded-3xl bg-[#111827] p-4">
-                <p className="text-sm uppercase tracking-[0.2em] text-textLight/70">Último resultado</p>
-                <p className="mt-2 text-lg font-semibold text-white">{results?.length ? `${results.length} sugerencias` : 'Aún no analizado'}</p>
+              <div className="rounded-3xl bg-[#E8F5E9] p-4 border border-[#C8E6C9]">
+                <p className="text-sm uppercase tracking-[0.2em] text-[#4A7C59]">Último resultado</p>
+                <p className="mt-2 text-lg font-semibold text-[#2D6A4F]">{results?.length ? `${results.length} sugerencias` : 'Aún no analizado'}</p>
               </div>
             </div>
 
