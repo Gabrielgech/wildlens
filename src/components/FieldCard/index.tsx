@@ -1,6 +1,7 @@
-import React from 'react'
+import { useMemo } from 'react'
 import type { Species } from '../../types'
-import { Volume2, MapPin, Circle, Leaf, AlertTriangle } from 'lucide-react'
+import { Volume2, MapPin, Circle, Leaf, AlertTriangle, Square } from 'lucide-react'
+import { useSoundPlayer } from '../../hooks/useSoundPlayer'
 
 interface FieldCardProps {
   species: Species
@@ -24,9 +25,13 @@ const urgencyClasses: Record<string, string> = {
 }
 
 export default function FieldCard({ species, onClose, mode }: FieldCardProps) {
+  const { playSound, stopSound, isPlaying, currentSoundType } = useSoundPlayer()
   const status = species.conservationStatus || 'LC'
   const danger = species.isDangerous && species.dangerLevel ? species.dangerLevel : 0
   const protocol = species.encounterProtocol?.[0]
+
+  const category = useMemo(() => (species.category || '').toLowerCase(), [species.category])
+  const activeSoundType = isPlaying ? currentSoundType : null
 
   return (
     <div className="field-card max-w-3xl mx-auto text-textLight shadow-[0_24px_80px_rgba(0,0,0,0.18)]">
@@ -87,11 +92,29 @@ export default function FieldCard({ species, onClose, mode }: FieldCardProps) {
             <span className="text-sm font-semibold">Sonidos</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-3">
-            {species.sounds?.map((sound, index) => (
-              <button key={index} className="rounded-2xl border border-[#52B788]/30 bg-[#16213E] px-3 py-2 text-sm text-[#d1d5db] transition hover:border-[#52B788]">
-                {sound.label}
-              </button>
-            ))}
+            {species.sounds?.map((sound, index) => {
+              const isActive = isPlaying && activeSoundType === sound.type
+              return (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => (isActive ? stopSound() : playSound(sound.type, category))}
+                  className={`rounded-2xl border px-4 py-3 text-sm transition focus:outline-none ${isActive ? 'border-emerald-400 bg-emerald-500/10 text-emerald-200 shadow-[0_0_30px_rgba(16,185,129,0.16)] animate-pulse' : 'border-[#52B788]/30 bg-[#16213E] text-[#d1d5db] hover:border-[#52B788]'}`}
+                >
+                  <div className="flex items-center gap-2">
+                    {isActive ? <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" /> : null}
+                    {isActive ? (
+                      <>
+                        <Square className="h-4 w-4" />
+                        <span>Reproduciendo...</span>
+                      </>
+                    ) : (
+                      sound.label
+                    )}
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       ) : null}
