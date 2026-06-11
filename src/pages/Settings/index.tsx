@@ -1,21 +1,61 @@
-import React, { useEffect, useState } from 'react'
-import { MapPin, Database, ShieldCheck, Wifi, Sparkles } from 'lucide-react'
+import React, { useContext, useEffect, useState } from 'react'
+import { MapPin, Database, ShieldCheck, Wifi, Sparkles, RefreshCcw, BookOpen } from 'lucide-react'
 import { db } from '../../db'
 import { FAUNA, FLORA, ECOSYSTEMS } from '../../data/species'
+import FoundryIQBadge from '../../components/FoundryIQBadge'
+import { LocationContext } from '../../context/LocationContext'
+import { getEcologicalAlert, syncSpeciesData, EcologicalAlert } from '../../services/foundryIQ'
 
 export default function Settings() {
   const [journalCount, setJournalCount] = useState(0)
+  const [lastSync, setLastSync] = useState<Date | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncMessage, setSyncMessage] = useState('')
+  const [sources, setSources] = useState<string[]>([])
+  const [lastAlert, setLastAlert] = useState<EcologicalAlert | null>(null)
+  const [showSources, setShowSources] = useState(false)
   const version = 'v0.1.0'
+  const { zone, isOnline } = useContext(LocationContext)
 
   useEffect(() => {
     db.journalEntries.count().then(count => setJournalCount(count))
   }, [])
 
+  useEffect(() => {
+    const fetchAlert = async () => {
+      const zoneLabel = zone?.name ?? 'Campeche'
+      try {
+        const alertResult = await getEcologicalAlert(zoneLabel)
+        setLastAlert(alertResult)
+      } catch {
+        setLastAlert(null)
+      }
+    }
+
+    fetchAlert()
+  }, [zone, isOnline])
+
+  const handleSync = async () => {
+    setIsSyncing(true)
+    setSyncMessage('')
+
+    try {
+      const result = await syncSpeciesData()
+      setLastSync(result.timestamp)
+      setSources(result.sources)
+      setSyncMessage(`${result.updated} especies actualizadas · Fuentes: ${result.sources.join(', ')}`)
+    } catch (error) {
+      setSyncMessage('No se pudo sincronizar. Usa el modo offline o verifica tu conexión.')
+    } finally {
+      setIsSyncing(false)
+    }
+  }
+
   const handleClearJournal = async () => {
-    const confirmed = window.confirm('¿Borrar todas las entradas del diario? Esta acción no se puede deshacer.')
-    if (!confirmed) return
-    await db.journalEntries.clear()
-    setJournalCount(0)
+    if (window.confirm('¿Seguro que quieres borrar todo tu diario de campo?')) {
+      await db.journalEntries.clear()
+      alert('Diario borrado correctamente.')
+    }
   }
 
   return (
@@ -67,6 +107,58 @@ export default function Settings() {
         </div>
 
         <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-[0_24px_48px_rgba(0,0,0,0.18)]">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div className="flex items-center gap-3 text-cyan-300">
+                <BookOpen className="h-5 w-5" />
+                <h2 className="text-xl font-semibold text-white">Foundry IQ</h2>
+              </div>
+              <p className="mt-3 text-textLight/80">Sincroniza datos científicos con WildLens y mantén el catálogo actualizado.</p>
+            </div>
+            <FoundryIQBadge lastSync={lastSync} isSyncing={isSyncing} isOnline={isOnline} />
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-[1.5fr_0.9fr]">
+            <div className="rounded-3xl bg-[#111827] p-5 text-textLight/80">
+              <button
+                type="button"
+                onClick={handleSync}
+                className="inline-flex items-center gap-2 rounded-3xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400"
+              >
+                <RefreshCcw className="h-4 w-4" /> Sincronizar ahora
+              </button>
+              {syncMessage ? <p className="mt-4 text-sm text-white">{syncMessage}</p> : null}
+              <div className="mt-4 rounded-3xl bg-[#0f172a] p-4">
+                <p className="text-sm uppercase text-textLight/70">Alerta ecológica</p>
+                <p className="mt-2 text-white">{lastAlert?.alert || 'Sin alertas disponibles por el momento.'}</p>
+                {lastAlert ? (
+                  <p className="mt-2 text-xs text-textLight/60">{lastAlert.source} · {lastAlert.severity.toUpperCase()}</p>
+                ) : null}
+              </div>
+            </div>
+            <div className="rounded-3xl bg-[#111827] p-5 text-textLight/80">
+              <p className="text-sm uppercase text-textLight/70">Fuentes científicas</p>
+              <button
+                type="button"
+                onClick={() => setShowSources(prev => !prev)}
+                className="mt-4 rounded-3xl bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                {showSources ? 'Ocultar fuentes' : 'Mostrar fuentes'}
+              </button>
+              {showSources ? (
+                <ul className="mt-4 space-y-2 text-sm text-textLight/80">
+                  {sources.length > 0 ? sources.map(source => (
+                    <li key={source} className="rounded-2xl bg-[#0f172a] p-3">{source}</li>
+                  )) : (
+                    <li className="rounded-2xl bg-[#0f172a] p-3">No hay fuentes registradas aún.</li>
+                  )}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-border bg-surface p-6 shadow-[0_24px_48px_rgba(0,0,0,0.18)]">
           <div className="flex items-center gap-3 text-violet-300">
             <Sparkles className="h-5 w-5" />
             <h2 className="text-xl font-semibold text-white">Acerca de</h2>
@@ -93,8 +185,8 @@ export default function Settings() {
               <h2 className="text-xl font-semibold text-white">Estado offline</h2>
             </div>
             <div className="mt-4 flex items-center gap-3 rounded-3xl bg-[#111827] p-4">
-              <span className="inline-flex h-3.5 w-3.5 rounded-full bg-emerald-400" />
-              <p className="text-textLight/80">Disponible sin internet</p>
+              <span className={`inline-flex h-3.5 w-3.5 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-500'}`} />
+              <p className="text-textLight/80">{isOnline ? 'Disponible sin internet' : 'Offline activado'}</p>
             </div>
           </div>
 
