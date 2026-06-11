@@ -3,28 +3,35 @@ import { NavLink } from 'react-router-dom'
 import { Camera, Mic, BookOpen, Settings } from 'lucide-react'
 
 const tabs = [
-  { to: '/identify', label: 'Identify', Icon: Camera },
-  { to: '/listen', label: 'Listen', Icon: Mic },
-  { to: '/journal', label: 'Journal', Icon: BookOpen },
-  { to: '/settings', label: 'Settings', Icon: Settings }
+  { to: '/identify', label: 'Cámara', Icon: Camera },
+  { to: '/listen', label: 'Audio', Icon: Mic },
+  { to: '/journal', label: 'Diario', Icon: BookOpen },
+  { to: '/settings', label: 'Ajustes', Icon: Settings }
 ]
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[92%] max-w-xl bg-surface rounded-lg shadow-lg border border-primary/20">
-      <ul className="flex justify-between p-2">
-        {tabs.map(({ to, Icon, label }) => (
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#16213E] border-t border-[#2D6A4F] z-50">
+      <ul className="mx-auto flex h-full max-w-4xl justify-between px-4">
+        {tabs.map(({ to, label, Icon }) => (
           <li key={to} className="flex-1">
             <NavLink
               to={to}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-1 py-2 px-1 text-sm ${
-                  isActive ? 'text-accent' : 'text-textLight/80'
+                `group h-full flex flex-col items-center justify-center gap-1 transition-colors duration-200 ${
+                  isActive ? 'text-[#52B788]' : 'text-[#4a5568]'
                 }`
               }
             >
-              <Icon className="w-6 h-6" />
-              <span className="sr-only">{label}</span>
+              {({ isActive }) => (
+                <>
+                  <div className="relative flex h-6 w-6 items-center justify-center">
+                    {isActive && <span className="absolute top-0 h-1.5 w-1.5 rounded-full bg-[#52B788]" />}
+                    <Icon className="h-6 w-6" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.2em]">{label}</span>
+                </>
+              )}
             </NavLink>
           </li>
         ))}
