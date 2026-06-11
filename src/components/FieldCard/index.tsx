@@ -1,6 +1,6 @@
 import React from 'react'
 import type { Species } from '../../types'
-import { Volume2, MapPin, SpoonKnife, Leaf, AlertTriangle } from 'lucide-react'
+import { Volume2, MapPin, Circle, Leaf, AlertTriangle } from 'lucide-react'
 
 interface FieldCardProps {
   species: Species
@@ -61,10 +61,8 @@ export default function FieldCard({ species, onClose, mode }: FieldCardProps) {
         </div>
 
         <div className="rounded-2xl bg-[#1f2744] p-4">
-          <div className="flex items-center gap-2 text-[#52B788]"><SpoonKnife className="h-4 w-4" /><span className="text-sm font-semibold">Alimentación</span></div>
-          <p className="mt-2 text-sm text-[#d1d5db]">
-            {mode === 'fauna' ? species.diet : (species as any).edibleParts ?? 'Ninguna'}
-          </p>
+          <div className="flex items-center gap-2 text-[#52B788]"><Circle className="h-4 w-4" /><span className="text-sm font-semibold">Alimentación</span></div>
+          <p className="mt-2 text-sm text-[#d1d5db]">{mode === 'fauna' ? species.diet : (species as any).edibleParts ?? 'Ninguna'}</p>
         </div>
 
         {mode === 'flora' ? (
