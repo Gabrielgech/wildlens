@@ -7,7 +7,7 @@ export interface SoundEntry {
 export interface EncounterProtocol {
   action: string
   description: string
-  urgency?: 'low' | 'medium' | 'high'
+  urgency?: 'low' | 'medium' | 'high' | 'critical'
 }
 
 export interface Species {
@@ -25,6 +25,7 @@ export interface Species {
   sounds?: SoundEntry[]
   imageUrl?: string
   region?: string
+  conservationStatus?: 'LC' | 'NT' | 'VU' | 'EN' | 'CR'
 }
 
 export interface Location {
