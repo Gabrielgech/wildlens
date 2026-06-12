@@ -43,43 +43,67 @@ export default function Identify() {
     return () => stopCamera()
   }, [])
 
-  useEffect(() => {
-    if (!photoImage || isModelLoading || modelError) return
-    setIsAnalyzing(true)
-    setJournalMessage(null)
-    classify(photoImage)
-      .then(result => setClassifyResult(result))
-      .catch(() => setClassifyResult(null))
-      .finally(() => setIsAnalyzing(false))
-  }, [photoImage, activeTab, isModelLoading, modelError])
+  // Removed auto-classify useEffect in favor of handleAnalyzeClick and img.onload hooks
 
   const commonFlora = FLORA.slice(0, 3)
   const commonFauna = FAUNA.slice(0, 3)
 
+  async function runClassification(img: HTMLImageElement) {
+    if (isModelLoading || modelError) return
+    setIsAnalyzing(true)
+    setJournalMessage(null)
+    try {
+      const result = await classify(img)
+      setClassifyResult(result)
+    } catch (e) {
+      console.error(e)
+      setClassifyResult(null)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   async function handleCapture() {
     try {
-      const { image, base64 } = await capturePhoto()
-      setPhotoSrc(base64)
-      setPhotoImage(image)
+      setIsAnalyzing(true)
+      const { base64 } = await capturePhoto()
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        setPhotoSrc(base64)
+        setPhotoImage(img)
+        runClassification(img)
+      }
+      img.src = base64
     } catch (err) {
       console.error(err)
+      setIsAnalyzing(false)
     }
   }
 
   function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
     if (!file) return
+    setIsAnalyzing(true)
     const reader = new FileReader()
     reader.onload = () => {
       const result = reader.result as string
-      const image = new Image()
-      image.src = result
-      image.onload = () => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
         setPhotoSrc(result)
-        setPhotoImage(image)
+        setPhotoImage(img)
+        runClassification(img)
       }
+      img.src = result
     }
     reader.readAsDataURL(file)
+  }
+
+  const handleAnalyzeClick = () => {
+    if (photoImage) {
+      runClassification(photoImage)
+    }
   }
 
   function resetPhoto() {
@@ -181,10 +205,15 @@ export default function Identify() {
                 variant="primary"
                 size="md"
                 className="absolute bottom-4 right-4"
-                onClick={handleCapture}
-                disabled={isAnalyzing || isModelLoading}
+                onClick={handleAnalyzeClick}
+                disabled={!photoImage || isAnalyzing || isModelLoading}
               >
-                Analizar
+                {isModelLoading ? 'Preparando IA...' : isAnalyzing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Analizando...
+                  </span>
+                ) : 'Analizar imagen'}
               </Button>
             </>
           ) : (
@@ -240,7 +269,7 @@ export default function Identify() {
         </div>
       ) : photoSrc && classifyResult ? (
         <section className="space-y-6">
-          <div key={activeTab} className="animate-tab-fade-in w-full">
+          <div key={activeTab} className="animate-fade-slide-up w-full">
             {activeTab === 'ecoscan' ? (
               <div className="field-card">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -256,8 +285,8 @@ export default function Identify() {
                   <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
                     <h4 className="text-sm font-semibold text-[#2D6A4F]">Posibles especies en esta zona</h4>
                     <div className="mt-4 space-y-3">
-                     {(ecosystemSpecies.length ? ecosystemSpecies : commonFauna).slice(0, 4).map((species: Species) => (
-                        <div key={species.id} className="flex items-center justify-between rounded-2xl bg-white p-3 border border-[#C8E6C9]">
+                      {(ecosystemSpecies.length ? ecosystemSpecies : commonFauna).slice(0, 4).map((species: Species, index: number) => (
+                        <div key={species.id} className="flex items-center justify-between rounded-2xl bg-white p-3 border border-[#C8E6C9] animate-fade-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                           <div className="flex items-center gap-3">
                             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E8F5E9] text-[#2D6A4F]">•</span>
                             <div>
@@ -315,8 +344,8 @@ export default function Identify() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {(altFlora.length ? altFlora : commonFlora.slice(1, 3)).map((item: any) => (
-                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
+                  {(altFlora.length ? altFlora : commonFlora.slice(1, 3)).map((item: any, index: number) => (
+                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4 animate-fade-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                       <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
                       <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
                       <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
@@ -350,8 +379,8 @@ export default function Identify() {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {(altFauna.length ? altFauna : commonFauna.slice(1, 3)).map((item: any) => (
-                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
+                  {(altFauna.length ? altFauna : commonFauna.slice(1, 3)).map((item: any, index: number) => (
+                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4 animate-fade-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                       <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
                       <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
                       <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>

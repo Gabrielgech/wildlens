@@ -34,7 +34,7 @@ export default function FieldCard({ species, onClose, mode }: FieldCardProps) {
   const activeSoundType = isPlaying ? currentSoundType : null
 
   return (
-    <div className="field-card max-w-3xl mx-auto text-[#1A3326] shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
+    <div className="field-card max-w-3xl mx-auto text-[#1A3326] shadow-[0_2px_8px_rgba(45,106,79,0.08)] animate-fade-slide-up">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[22px] font-bold text-[#1A3326]">{species.commonName}</h2>

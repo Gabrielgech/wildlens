@@ -80,7 +80,7 @@ export default function Listen() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <button
-                  className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${isRecording ? 'bg-[#E63946] text-white hover:bg-[#D62828]' : 'bg-[#52B788] text-white hover:bg-[#2D6A4F]'}`}
+                  className={`rounded-3xl px-5 py-3 text-sm font-semibold transition ${isRecording ? 'bg-[#E63946] text-white hover:bg-[#D62828]' : 'bg-[#52B788] text-white hover:bg-[#2D6A4F] animate-pulse-green'}`}
                   onClick={isRecording ? stopRecording : startRecording}
                 >
                   {isRecording ? 'Detener' : 'Iniciar grabación'}
@@ -111,7 +111,12 @@ export default function Listen() {
                 onClick={handleAnalyze}
                 disabled={!canAnalyze || isAnalyzing}
               >
-                {isAnalyzing ? 'Analizando…' : 'Analizar grabación'}
+                {isAnalyzing ? (
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                    Procesando audio...
+                  </span>
+                ) : 'Analizar sonido'}
               </button>
               {error ? <span className="text-sm text-rose-300">{error}</span> : null}
             </div>
@@ -138,12 +143,13 @@ export default function Listen() {
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {results.map(result => (
+              {results.map((result, index) => (
                 <button
                   key={result.species.id}
                   type="button"
                   onClick={() => setSelectedSpecies(result.species)}
-                  className="rounded-3xl border border-white/10 bg-[#0f172a] p-5 text-left transition hover:border-cyan-400/30"
+                  className="rounded-3xl border border-white/10 bg-[#0f172a] p-5 text-left transition hover:border-cyan-400/30 animate-fade-slide-up"
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>

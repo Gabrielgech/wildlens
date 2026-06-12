@@ -33,9 +33,9 @@ const cards = [
   }
 ]
 
-function FeatureCard({ title, desc, Icon, to }: { title: string; desc: string; Icon: React.ComponentType<{ className?: string }>; to: string }) {
+function FeatureCard({ title, desc, Icon, to, index }: { title: string; desc: string; Icon: React.ComponentType<{ className?: string }>; to: string; index: number }) {
   return (
-    <Link to={to} className="field-card group flex min-h-[180px] flex-col justify-between transition duration-200 hover:-translate-y-1 hover:border-[#2D6A4F] border-l-4 border-l-[#2D6A4F]">
+    <Link to={to} className="field-card group flex min-h-[180px] flex-col justify-between transition duration-200 hover:-translate-y-1 hover:border-[#2D6A4F] border-l-4 border-l-[#2D6A4F] animate-fade-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
       <div>
         <Icon className="h-12 w-12 text-[#2D6A4F]" />
         <h3 className="mt-4 text-xl font-bold text-[#1A3326]">{title}</h3>
@@ -90,8 +90,8 @@ export default function Home() {
       ) : null}
 
       <main className="mt-8 grid gap-4 sm:grid-cols-2">
-        {cards.map(card => (
-          <FeatureCard key={card.title} title={card.title} desc={card.desc} Icon={card.icon} to={card.to} />
+        {cards.map((card, idx) => (
+          <FeatureCard key={card.title} title={card.title} desc={card.desc} Icon={card.icon} to={card.to} index={idx} />
         ))}
       </main>
 

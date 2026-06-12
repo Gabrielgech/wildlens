@@ -27,19 +27,28 @@ export function useImageClassifier() {
   useEffect(() => {
     let mounted = true
     setIsModelLoading(true)
-    mobilenet.load()
-      .then(loadedModel => {
+    
+    const loadModel = async () => {
+      try {
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Timeout loading model')), 10000))
+        const loadedModel = await Promise.race([
+          mobilenet.load({ version: 2, alpha: 1.0 }),
+          timeout
+        ])
         if (mounted) {
-          setModel(loadedModel)
+          setModel(loadedModel as MobileNet)
           setIsModelLoading(false)
         }
-      })
-      .catch(err => {
+      } catch (err: any) {
         if (mounted) {
-          setModelError(err?.message || 'No se pudo cargar el modelo de IA.')
+          console.error(err)
+          setModelError('IA local no disponible - usa selección manual')
           setIsModelLoading(false)
         }
-      })
+      }
+    }
+    
+    loadModel()
 
     return () => {
       mounted = false
@@ -205,45 +214,58 @@ export function useImageClassifier() {
   }
 
   async function classify(image: HTMLImageElement | HTMLVideoElement): Promise<ClassifyResponse> {
-    if (!model) {
-      throw new Error('Modelo no cargado.')
+    if (!model || !image) {
+      return { results: [], predictions: [], suggestManualSelection: true }
     }
 
-    const predictions = await model.classify(image, 5)
-    const normalizedWords = predictions
-      .flatMap(prediction => normalizeLabel(prediction.className))
-      .filter((word, index, list) => list.indexOf(word) === index)
+    try {
+      const predictions = await model.classify(image, 5)
+      const normalizedWords = predictions
+        .flatMap(prediction => normalizeLabel(prediction.className))
+        .filter((word, index, list) => list.indexOf(word) === index)
 
-    const speciesMatches = searchSpecies(normalizedWords)
-    const ecosystem = detectEcosystem(predictions.map(prediction => prediction.className))
+      const speciesMatches = searchSpecies(normalizedWords)
+      const ecosystem = detectEcosystem(predictions.map(prediction => prediction.className))
 
-    let results: ClassificationResult[] = []
-    let suggestManualSelection = false
+      let results: ClassificationResult[] = []
+      let suggestManualSelection = false
 
-    // Try direct matching first
-    if (speciesMatches.length > 0) {
-      speciesMatches.slice(0, 3).forEach((match, index) => {
-        const prediction = predictions[index] || predictions[0]
-        match.confidence = Math.round((prediction?.probability ?? 0.5) * 100)
-        results.push(match)
-      })
-    }
+      if (speciesMatches.length > 0) {
+        speciesMatches.slice(0, 3).forEach((match, index) => {
+          const prediction = predictions[index] || predictions[0]
+          match.confidence = Math.round((prediction?.probability ?? 0.5) * 100)
+          results.push(match)
+        })
+      }
 
-    // If confidence is too low or no matches, use smart fallback
-    const maxConfidence = results.length > 0 ? Math.max(...results.map(r => r.confidence)) : 0
-    if (maxConfidence < 40 || results.length === 0) {
-      results = smartFallback(predictions, ecosystem)
-      suggestManualSelection = true
-    }
+      const maxConfidence = results.length > 0 ? Math.max(...results.map(r => r.confidence)) : 0
+      if (maxConfidence < 40 || results.length === 0) {
+        results = smartFallback(predictions, ecosystem)
+        suggestManualSelection = true
+      }
 
-    return {
-      results: results.slice(0, 3),
-      ecosystem,
-      predictions: predictions.map(prediction => ({
-        className: prediction.className,
-        probability: prediction.probability
-      })),
-      suggestManualSelection
+      if (results.length === 0) {
+         const commonFauna = FAUNA.slice(0, 3)
+         results = commonFauna.map((species, i) => ({
+           species,
+           confidence: 40 - i * 10,
+           reason: 'Especie común de Campeche (fallback)'
+         }))
+         suggestManualSelection = true
+      }
+
+      return {
+        results: results.slice(0, 3),
+        ecosystem,
+        predictions: predictions.map(prediction => ({
+          className: prediction.className,
+          probability: Math.round(prediction.probability * 100)
+        })),
+        suggestManualSelection
+      }
+    } catch (err) {
+      console.error(err)
+      return { results: [], predictions: [], suggestManualSelection: true }
     }
   }
 

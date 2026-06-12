@@ -9,13 +9,13 @@ interface LocationBadgeProps {
 
 export default function LocationBadge({ zone, hasGPS, onClick }: LocationBadgeProps) {
   const label = hasGPS ? (zone ? zone.name : 'Campeche, México') : 'Ubicación no disponible'
-  const dotColor = hasGPS ? 'bg-emerald-400' : 'bg-slate-500'
+  const dotColor = hasGPS ? 'bg-green-500' : 'bg-slate-500'
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#0f172a] px-4 py-2 text-sm text-textLight transition hover:border-emerald-400/40"
+      className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-3 py-1 text-sm font-medium text-green-800 transition hover:bg-green-100"
     >
       <span className={`inline-flex h-2.5 w-2.5 rounded-full ${dotColor}`} />
       <span>📍 {label}</span>
