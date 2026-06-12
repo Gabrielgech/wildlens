@@ -240,125 +240,127 @@ export default function Identify() {
         </div>
       ) : photoSrc && classifyResult ? (
         <section className="space-y-6">
-          {activeTab === 'ecoscan' ? (
-            <div className="field-card">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-3 py-1 text-xs text-[#2D6A4F]">Ecosistema detectado</div>
-                  <h3 className="mt-4 text-2xl font-bold text-[#1A3326]">{classifyResult.ecosystem?.name ?? 'Selva tropical'}</h3>
-                  <p className="mt-2 max-w-2xl text-sm text-[#4A7C59]">{classifyResult.ecosystem?.description}</p>
-                </div>
-                <div className="rounded-3xl bg-[#E8F5E9] px-4 py-3 text-sm text-[#2D6A4F] font-medium">Zona: {classifyResult.ecosystem?.zone}</div>
-              </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
-                  <h4 className="text-sm font-semibold text-[#2D6A4F]">Posibles especies en esta zona</h4>
-                  <div className="mt-4 space-y-3">
-                   {(ecosystemSpecies.length ? ecosystemSpecies : commonFauna).slice(0, 4).map((species: Species) => (
-                      <div key={species.id} className="flex items-center justify-between rounded-2xl bg-white p-3 border border-[#C8E6C9]">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E8F5E9] text-[#2D6A4F]">•</span>
-                          <div>
-                            <p className="font-semibold text-[#1A3326]">{species.commonName}</p>
-                            <p className="text-xs text-[#4A7C59]">{species.scientificName}</p>
-                          </div>
-                        </div>
-                        {species.isDangerous ? (
-                          <span className="rounded-full bg-[#FFEBEE] px-2 py-1 text-[11px] font-semibold text-[#E63946]">Peligro {species.dangerLevel}/5</span>
-                        ) : null}
-                      </div>
-                    ))}
+          <div key={activeTab} className="animate-tab-fade-in w-full">
+            {activeTab === 'ecoscan' ? (
+              <div className="field-card">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-3 py-1 text-xs text-[#2D6A4F]">Ecosistema detectado</div>
+                    <h3 className="mt-4 text-2xl font-bold text-[#1A3326]">{classifyResult.ecosystem?.name ?? 'Selva tropical'}</h3>
+                    <p className="mt-2 max-w-2xl text-sm text-[#4A7C59]">{classifyResult.ecosystem?.description}</p>
                   </div>
+                  <div className="rounded-3xl bg-[#E8F5E9] px-4 py-3 text-sm text-[#2D6A4F] font-medium">Zona: {classifyResult.ecosystem?.zone}</div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
-                    <h4 className="text-sm font-semibold text-[#F4A261]">Riesgos detectados</h4>
-                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#D97706]">
-                      {(classifyResult.ecosystem?.risks ?? ['Riesgos no disponibles']).map((risk: string) => (
-                        <li key={risk}>{risk}</li>
-                      ))}
-                    </ul>
-                  </div>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
-                    <h4 className="text-sm font-semibold text-[#2D6A4F]">Curiosidades</h4>
-                    <p className="mt-3 text-sm text-[#4A7C59]">{classifyResult.ecosystem?.curiosities?.[0] ?? 'Información cultural local disponible.'}</p>
-                  </div>
-                  {classifyResult.ecosystem?.migratory?.length ? (
-                    <div className="rounded-2xl bg-[#1f2744] p-4">
-                      <h4 className="text-sm font-semibold text-[#52B788]">Especies migratorias</h4>
-                      <p className="mt-3 text-sm text-[#cbd5e1]">{classifyResult.ecosystem.migratory.join(', ')}</p>
+                    <h4 className="text-sm font-semibold text-[#2D6A4F]">Posibles especies en esta zona</h4>
+                    <div className="mt-4 space-y-3">
+                     {(ecosystemSpecies.length ? ecosystemSpecies : commonFauna).slice(0, 4).map((species: Species) => (
+                        <div key={species.id} className="flex items-center justify-between rounded-2xl bg-white p-3 border border-[#C8E6C9]">
+                          <div className="flex items-center gap-3">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E8F5E9] text-[#2D6A4F]">•</span>
+                            <div>
+                              <p className="font-semibold text-[#1A3326]">{species.commonName}</p>
+                              <p className="text-xs text-[#4A7C59]">{species.scientificName}</p>
+                            </div>
+                          </div>
+                          {species.isDangerous ? (
+                            <span className="rounded-full bg-[#FFEBEE] px-2 py-1 text-[11px] font-semibold text-[#E63946]">Peligro {species.dangerLevel}/5</span>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
-                  ) : null}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
+                      <h4 className="text-sm font-semibold text-[#F4A261]">Riesgos detectados</h4>
+                      <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#D97706]">
+                        {(classifyResult.ecosystem?.risks ?? ['Riesgos no disponibles']).map((risk: string) => (
+                          <li key={risk}>{risk}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
+                      <h4 className="text-sm font-semibold text-[#2D6A4F]">Curiosidades</h4>
+                      <p className="mt-3 text-sm text-[#4A7C59]">{classifyResult.ecosystem?.curiosities?.[0] ?? 'Información cultural local disponible.'}</p>
+                    </div>
+                    {classifyResult.ecosystem?.migratory?.length ? (
+                      <div className="rounded-2xl bg-[#1f2744] p-4">
+                        <h4 className="text-sm font-semibold text-[#52B788]">Especies migratorias</h4>
+                        <p className="mt-3 text-sm text-[#cbd5e1]">{classifyResult.ecosystem.migratory.join(', ')}</p>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {activeTab === 'flora' ? (
-            <div className="space-y-6">
-              <div className="field-card">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">{floraTop.species.commonName}</h3>
-                    <p className="mt-1 text-sm italic text-[#52B788]">{floraTop.species.scientificName}</p>
-                    <p className="mt-2 text-sm text-[#cbd5e1]">Confianza: {floraTop.confidence}%</p>
+            {activeTab === 'flora' ? (
+              <div className="space-y-6">
+                <div className="field-card">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">{floraTop.species.commonName}</h3>
+                      <p className="mt-1 text-sm italic text-[#52B788]">{floraTop.species.scientificName}</p>
+                      <p className="mt-2 text-sm text-[#cbd5e1]">Confianza: {floraTop.confidence}%</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {floraTop.species.isEdible ? <span className="rounded-full bg-[#2D6A4F] px-3 py-1 text-xs font-semibold text-white">COMESTIBLE</span> : null}
+                      {(floraTop.species as any).isToxic ? <span className="rounded-full bg-[#E63946] px-3 py-1 text-xs font-semibold text-white">⚠️ TÓXICO</span> : null}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {floraTop.species.isEdible ? <span className="rounded-full bg-[#2D6A4F] px-3 py-1 text-xs font-semibold text-white">COMESTIBLE</span> : null}
-                    {(floraTop.species as any).isToxic ? <span className="rounded-full bg-[#E63946] px-3 py-1 text-xs font-semibold text-white">⚠️ TÓXICO</span> : null}
-                  </div>
+                  <FieldCard species={floraTop.species} mode="flora" />
                 </div>
-                <FieldCard species={floraTop.species} mode="flora" />
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {(altFlora.length ? altFlora : commonFlora.slice(1, 3)).map((item: any) => (
-                  <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
-                    <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
-                    <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
-                    <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {activeTab === 'fauna' ? (
-            <div className="space-y-6">
-              {faunaTop.species.isDangerous ? (
-                <div className="rounded-2xl bg-[#641E16] p-4 text-white">
-                  <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.1em]">
-                    <AlertTriangle className="h-4 w-4" /> PELIGROSO — Nivel {faunaTop.species.dangerLevel}/5
-                  </div>
-                  <p className="mt-3 text-sm text-[#f8eaea]">{faunaTop.species.encounterProtocol?.[0]?.action}</p>
-                  <p className="mt-2 text-sm text-[#f8eaea]/90">{faunaTop.species.encounterProtocol?.[0]?.description}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {(altFlora.length ? altFlora : commonFlora.slice(1, 3)).map((item: any) => (
+                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
+                      <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
+                      <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
+                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
+                    </div>
+                  ))}
                 </div>
-              ) : null}
+              </div>
+            ) : null}
 
-              <div className="field-card">
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-2xl font-bold text-white">{faunaTop.species.commonName}</h3>
-                    <p className="mt-1 text-sm italic text-[#52B788]">{faunaTop.species.scientificName}</p>
-                    <p className="mt-2 text-sm text-[#cbd5e1]">Confianza: {faunaTop.confidence}%</p>
+            {activeTab === 'fauna' ? (
+              <div className="space-y-6">
+                {faunaTop.species.isDangerous ? (
+                  <div className="rounded-2xl bg-[#641E16] p-4 text-white">
+                    <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.1em]">
+                      <AlertTriangle className="h-4 w-4" /> PELIGROSO — Nivel {faunaTop.species.dangerLevel}/5
+                    </div>
+                    <p className="mt-3 text-sm text-[#f8eaea]">{faunaTop.species.encounterProtocol?.[0]?.action}</p>
+                    <p className="mt-2 text-sm text-[#f8eaea]/90">{faunaTop.species.encounterProtocol?.[0]?.description}</p>
                   </div>
+                ) : null}
+
+                <div className="field-card">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-white">{faunaTop.species.commonName}</h3>
+                      <p className="mt-1 text-sm italic text-[#52B788]">{faunaTop.species.scientificName}</p>
+                      <p className="mt-2 text-sm text-[#cbd5e1]">Confianza: {faunaTop.confidence}%</p>
+                    </div>
+                  </div>
+                  <FieldCard species={faunaTop.species} mode="fauna" />
                 </div>
-                <FieldCard species={faunaTop.species} mode="fauna" />
-              </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {(altFauna.length ? altFauna : commonFauna.slice(1, 3)).map((item: any) => (
-                  <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
-                    <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
-                    <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
-                    <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
-                  </div>
-                ))}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {(altFauna.length ? altFauna : commonFauna.slice(1, 3)).map((item: any) => (
+                    <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4">
+                      <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
+                      <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
+                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
           <div className="rounded-2xl bg-[#E8F5E9] p-4 border border-[#C8E6C9]">
             <p className="text-sm text-[#2D6A4F]">
