@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BookOpen, Compass, MapPin, Image, Eye } from 'lucide-react'
+import { BookOpen, Compass, MapPin, Image, Eye, ChevronLeft } from 'lucide-react'
 import { db } from '../../db'
 import FieldCard from '../../components/FieldCard'
 import { getSpeciesById } from '../../data/species'
@@ -57,6 +57,12 @@ export default function Journal() {
 
   return (
     <div className="min-h-screen p-4 bg-[#F8FBF0]">
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-green-700 mb-4"
+      >
+        <ChevronLeft size={20} /> Regresar
+      </button>
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="rounded-[2rem] border border-[#C8E6C9] bg-white p-6 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

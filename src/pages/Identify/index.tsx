@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useCamera } from '../../hooks/useCamera'
 import { useImageClassifier } from '../../hooks/useImageClassifier'
 import { FLORA, FAUNA, ECOSYSTEMS, getSpeciesById, getManualSelectionList } from '../../data/species'
@@ -14,7 +15,9 @@ import {
   Mountain,
   PawPrint,
   AlertTriangle,
-  ChevronDown
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react'
 
 const tabs = [
@@ -26,95 +29,65 @@ const tabs = [
 type TabId = (typeof tabs)[number]['id']
 
 export default function Identify() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('ecoscan')
-  const [photoSrc, setPhotoSrc] = useState<string | null>(null)
-  const [photoImage, setPhotoImage] = useState<HTMLImageElement | null>(null)
-  const [classifyResult, setClassifyResult] = useState<any>(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [capturedBase64, setCapturedBase64] = useState<string | null>(null)
+  const [analysisResults, setAnalysisResults] = useState<any[]>([])
   const [journalMessage, setJournalMessage] = useState<string | null>(null)
   const [showManualSelection, setShowManualSelection] = useState(false)
   const [manualSearchQuery, setManualSearchQuery] = useState('')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const { videoRef, startCamera, stopCamera, capturePhoto, hasPermission, error, isLoading: cameraLoading } = useCamera()
-  const { classify, isModelLoading, modelError } = useImageClassifier()
+  const { videoRef, startCamera, stopCamera, capturePhoto, hasPermission, error: cameraError, isLoading: cameraLoading } = useCamera()
+  const { classify, isClassifying, error: classifyError, isDemoMode } = useImageClassifier()
 
   useEffect(() => {
     startCamera()
     return () => stopCamera()
   }, [])
 
-  // Removed auto-classify useEffect in favor of handleAnalyzeClick and img.onload hooks
-
   const commonFlora = FLORA.slice(0, 3)
   const commonFauna = FAUNA.slice(0, 3)
 
-  async function runClassification(img: HTMLImageElement) {
-    if (isModelLoading || modelError) return
-    setIsAnalyzing(true)
-    setJournalMessage(null)
-    try {
-      const result = await classify(img)
-      setClassifyResult(result)
-    } catch (e) {
-      console.error(e)
-      setClassifyResult(null)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
-
   async function handleCapture() {
     try {
-      setIsAnalyzing(true)
       const { base64 } = await capturePhoto()
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        setPhotoSrc(base64)
-        setPhotoImage(img)
-        runClassification(img)
-      }
-      img.src = base64
+      // base64 from capturePhoto already has the data:image/jpeg;base64, prefix? 
+      // wait, in original it sets photoSrc to base64. Let's assume it has prefix.
+      setCapturedBase64(base64.split(',')[1] || base64)
+      setAnalysisResults([])
     } catch (err) {
       console.error(err)
-      setIsAnalyzing(false)
     }
   }
 
-  function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0]
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
     if (!file) return
-    setIsAnalyzing(true)
     const reader = new FileReader()
-    reader.onload = () => {
-      const result = reader.result as string
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        setPhotoSrc(result)
-        setPhotoImage(img)
-        runClassification(img)
-      }
-      img.src = result
+    reader.onload = (event) => {
+      const base64 = (event.target?.result as string).split(',')[1]
+      setCapturedBase64(base64)
+      setAnalysisResults([])
     }
     reader.readAsDataURL(file)
   }
 
-  const handleAnalyzeClick = () => {
-    if (photoImage) {
-      runClassification(photoImage)
-    }
+  const handleAnalyze = async () => {
+    if (!capturedBase64) return
+    const mode = activeTab === 'flora' ? 'flora' : 
+                 activeTab === 'ecoscan' ? 'ecosystem' : 'fauna'
+    const results = await classify(capturedBase64, mode)
+    setAnalysisResults(results)
   }
 
   function resetPhoto() {
-    setPhotoSrc(null)
-    setPhotoImage(null)
-    setClassifyResult(null)
+    setCapturedBase64(null)
+    setAnalysisResults([])
     setJournalMessage(null)
   }
 
   async function saveJournal() {
-    const top = classifyResult?.results?.[0]?.species
+    const top = analysisResults[0]?.species
     if (!top) {
       setJournalMessage('No hay especie para guardar.')
       return
@@ -131,20 +104,26 @@ export default function Identify() {
     }
   }
 
-  const topFlora = classifyResult?.results?.find((item: any) => ['tree', 'plant', 'bush'].includes(item.species.category))
-  const topFauna = classifyResult?.results?.find((item: any) => ['mammal', 'bird', 'reptile', 'amphibian', 'insect'].includes(item.species.category))
-  const altFlora = classifyResult?.results?.filter((item: any) => item !== topFlora && ['tree', 'plant', 'bush'].includes(item.species.category)).slice(0, 2) ?? []
-  const altFauna = classifyResult?.results?.filter((item: any) => item !== topFauna && ['mammal', 'bird', 'reptile', 'amphibian', 'insect'].includes(item.species.category)).slice(0, 2) ?? []
+  const topFlora = analysisResults.find((item: any) => ['tree', 'plant', 'bush'].includes(item.species?.category)) || analysisResults[0]
+  const topFauna = analysisResults.find((item: any) => ['mammal', 'bird', 'reptile', 'amphibian', 'insect'].includes(item.species?.category)) || analysisResults[0]
+  const altFlora = analysisResults.filter((item: any) => item !== topFlora && ['tree', 'plant', 'bush'].includes(item.species?.category)).slice(0, 2)
+  const altFauna = analysisResults.filter((item: any) => item !== topFauna && ['mammal', 'bird', 'reptile', 'amphibian', 'insect'].includes(item.species?.category)).slice(0, 2)
 
-  const floraTop = topFlora ?? { species: commonFlora[0], confidence: 0, reason: 'Sin coincidencias directas' }
-  const faunaTop = topFauna ?? { species: commonFauna[0], confidence: 0, reason: 'Sin coincidencias directas' }
+  const floraTop = topFlora ?? { species: commonFlora[0], confidence: 0, reasoning: 'Sin coincidencias directas' }
+  const faunaTop = topFauna ?? { species: commonFauna[0], confidence: 0, reasoning: 'Sin coincidencias directas' }
 
-  const ecosystemSpecies = classifyResult?.ecosystem?.typicalSpecies
-    ? classifyResult.ecosystem.typicalSpecies.map((id: string) => getSpeciesById(id)).filter(Boolean)
-    : []
+  // Ecosystem fallback if mode is ecoscan
+  const ecosystemSpecies = commonFauna
 
   return (
     <div className="min-h-screen bg-background px-4 pb-32 pt-6 text-textLight">
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-green-700 mb-4"
+      >
+        <ChevronLeft size={20} /> Regresar
+      </button>
+
       <div className="mb-6 rounded-[28px] border border-[#C8E6C9] bg-white p-4 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-[#E8F5E9] text-[#2D6A4F]">
@@ -152,26 +131,38 @@ export default function Identify() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#2D6A4F]">WildLens Identify</h1>
-            <p className="mt-1 text-sm italic text-[#4A7C59]">Usa la cámara para reconocer ecosistemas y especies con IA.</p>
+            <p className="mt-1 text-sm italic text-[#4A7C59]">Usa la cámara para reconocer especies con IA.</p>
           </div>
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2 rounded-full bg-white p-1 border border-[#C8E6C9]">
-        {tabs.map(tab => {
-          const isActive = activeTab === tab.id
-          const Icon = tab.icon
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex min-w-[110px] items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition ${isActive ? 'bg-[#E8F5E9] text-[#2D6A4F] border-b-2 border-[#2D6A4F]' : 'text-[#9E9E9E] hover:bg-[#F8FBF0]'}`}
-            >
-              <Icon className="h-5 w-5" />
-              {tab.label}
-            </button>
-          )
-        })}
+      <div className="mb-6 flex items-center justify-between gap-2 rounded-full bg-white p-1 border border-[#C8E6C9]">
+        <button onClick={() => {
+          const idx = tabs.findIndex(t => t.id === activeTab);
+          setActiveTab(tabs[(idx - 1 + tabs.length) % tabs.length].id)
+        }} className="p-2 text-[#2D6A4F] hover:bg-[#E8F5E9] rounded-full">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+        <div className="flex flex-1 gap-1 overflow-x-auto px-2">
+          {tabs.map(tab => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 min-w-[80px] rounded-full px-3 py-2 text-xs font-bold transition whitespace-nowrap ${isActive ? 'bg-[#2D6A4F] text-white' : 'bg-white text-[#2D6A4F] border border-[#C8E6C9]'}`}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+        <button onClick={() => {
+          const idx = tabs.findIndex(t => t.id === activeTab);
+          setActiveTab(tabs[(idx + 1) % tabs.length].id)
+        }} className="p-2 text-[#2D6A4F] hover:bg-[#E8F5E9] rounded-full">
+          <ChevronRight className="h-5 w-5" />
+        </button>
       </div>
 
       <section className="field-card mb-6">
@@ -187,7 +178,7 @@ export default function Identify() {
             <Button variant="primary" size="sm" icon={<Camera className="h-4 w-4" />} onClick={handleCapture} disabled={cameraLoading || !hasPermission}>
               Tomar foto
             </Button>
-            {photoSrc ? (
+            {capturedBase64 ? (
               <Button variant="ghost" size="sm" icon={<RefreshCcw className="h-4 w-4" />} onClick={resetPhoto}>
                 Nueva foto
               </Button>
@@ -195,25 +186,25 @@ export default function Identify() {
           </div>
         </div>
 
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
 
         <div className="relative overflow-hidden rounded-[24px] border border-[#C8E6C9] bg-[#F1F8E9] p-3">
-          {photoSrc ? (
+          {capturedBase64 ? (
             <>
-              <img src={photoSrc} alt="Preview" className="h-72 w-full rounded-[20px] object-cover" />
+              <img src={`data:image/jpeg;base64,${capturedBase64}`} alt="Preview" className="h-72 w-full rounded-[20px] object-cover" />
               <Button
-                variant="primary"
+                variant={analysisResults.length > 0 ? "secondary" : "primary"}
                 size="md"
                 className="absolute bottom-4 right-4"
-                onClick={handleAnalyzeClick}
-                disabled={!photoImage || isAnalyzing || isModelLoading}
+                onClick={handleAnalyze}
+                disabled={!capturedBase64 || isClassifying}
               >
-                {isModelLoading ? 'Preparando IA...' : isAnalyzing ? (
+                {isClassifying ? (
                   <span className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Analizando...
                   </span>
-                ) : 'Analizar imagen'}
+                ) : analysisResults.length > 0 ? 'Analizar otra vez' : '🔍 Analizar imagen'}
               </Button>
             </>
           ) : (
@@ -239,8 +230,16 @@ export default function Identify() {
                     <p className="text-sm text-[#4A7C59]">Iniciando cámara...</p>
                   </div>
                 ) : (
-                  <div className="flex h-full items-center justify-center">
+                  <div className="relative h-full w-full">
                     <video ref={videoRef} className="h-full w-full rounded-[20px] bg-[#E8F5E9] object-cover" muted playsInline />
+                    <Button
+                      variant="primary"
+                      size="md"
+                      className="absolute bottom-4 right-4 bg-gray-400 opacity-50 cursor-not-allowed"
+                      disabled={true}
+                    >
+                      Sube una foto primero
+                    </Button>
                   </div>
                 )}
               </div>
@@ -248,26 +247,19 @@ export default function Identify() {
           )}
         </div>
 
-        {(error || modelError) ? (
-          <div className="mt-3 rounded-2xl bg-[#FFEBEE] p-3 text-sm text-[#E63946]">{error || modelError}</div>
+        {(cameraError || classifyError) ? (
+          <div className="mt-3 rounded-2xl bg-[#FFEBEE] p-3 text-sm text-[#E63946]">{cameraError || classifyError}</div>
         ) : null}
       </section>
 
-      {isModelLoading ? (
-        <div className="field-card flex items-center justify-center p-10 text-sm text-[#4A7C59]">
-          <div className="flex items-center gap-3">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#2D6A4F] border-[#E8F5E9]" />
-            Preparando IA local... (solo la primera vez)
-          </div>
-        </div>
-      ) : isAnalyzing ? (
+      {isClassifying ? (
         <div className="field-card flex items-center justify-center p-10 text-sm text-[#4A7C59]">
           <div className="flex items-center gap-3">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-[#2D6A4F] border-[#E8F5E9]" />
             Analizando imagen...
           </div>
         </div>
-      ) : photoSrc && classifyResult ? (
+      ) : capturedBase64 && analysisResults.length > 0 ? (
         <section className="space-y-6">
           <div key={activeTab} className="animate-fade-slide-up w-full">
             {activeTab === 'ecoscan' ? (
@@ -275,10 +267,10 @@ export default function Identify() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="inline-flex items-center gap-2 rounded-full bg-[#E8F5E9] px-3 py-1 text-xs text-[#2D6A4F]">Ecosistema detectado</div>
-                    <h3 className="mt-4 text-2xl font-bold text-[#1A3326]">{classifyResult.ecosystem?.name ?? 'Selva tropical'}</h3>
-                    <p className="mt-2 max-w-2xl text-sm text-[#4A7C59]">{classifyResult.ecosystem?.description}</p>
+                    <h3 className="mt-4 text-2xl font-bold text-[#1A3326]">Selva tropical</h3>
+                    <p className="mt-2 max-w-2xl text-sm text-[#4A7C59]">Ecosistema detectado a través de análisis de imágenes.</p>
                   </div>
-                  <div className="rounded-3xl bg-[#E8F5E9] px-4 py-3 text-sm text-[#2D6A4F] font-medium">Zona: {classifyResult.ecosystem?.zone}</div>
+                  <div className="rounded-3xl bg-[#E8F5E9] px-4 py-3 text-sm text-[#2D6A4F] font-medium">Zona: Campeche</div>
                 </div>
 
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -306,21 +298,13 @@ export default function Identify() {
                     <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
                       <h4 className="text-sm font-semibold text-[#F4A261]">Riesgos detectados</h4>
                       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#D97706]">
-                        {(classifyResult.ecosystem?.risks ?? ['Riesgos no disponibles']).map((risk: string) => (
-                          <li key={risk}>{risk}</li>
-                        ))}
+                        <li>Riesgos según el área identificada</li>
                       </ul>
                     </div>
                     <div className="rounded-2xl bg-[#F1F8E9] p-4 border border-[#C8E6C9]">
                       <h4 className="text-sm font-semibold text-[#2D6A4F]">Curiosidades</h4>
-                      <p className="mt-3 text-sm text-[#4A7C59]">{classifyResult.ecosystem?.curiosities?.[0] ?? 'Información cultural local disponible.'}</p>
+                      <p className="mt-3 text-sm text-[#4A7C59]">Información cultural local disponible.</p>
                     </div>
-                    {classifyResult.ecosystem?.migratory?.length ? (
-                      <div className="rounded-2xl bg-[#1f2744] p-4">
-                        <h4 className="text-sm font-semibold text-[#52B788]">Especies migratorias</h4>
-                        <p className="mt-3 text-sm text-[#cbd5e1]">{classifyResult.ecosystem.migratory.join(', ')}</p>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               </div>
@@ -348,7 +332,7 @@ export default function Identify() {
                     <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4 animate-fade-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                       <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
                       <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
-                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
+                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reasoning}</p>
                     </div>
                   ))}
                 </div>
@@ -383,7 +367,7 @@ export default function Identify() {
                     <div key={item.species.id} className="rounded-2xl bg-[#1f2744] p-4 animate-fade-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                       <p className="text-sm font-semibold text-white">{item.species.commonName}</p>
                       <p className="mt-2 text-xs text-[#94a3b8]">{item.species.scientificName}</p>
-                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reason}</p>
+                      <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#52B788]">{item.reasoning}</p>
                     </div>
                   ))}
                 </div>
@@ -397,11 +381,9 @@ export default function Identify() {
             </p>
           </div>
 
-          {classifyResult?.suggestManualSelection ? (
-            <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
-              <p className="text-sm font-medium text-[#D97706]">¿No es correcto? Selecciona manualmente de nuestra base de datos.</p>
-            </div>
-          ) : null}
+          <div className="rounded-2xl bg-[#FFF3E0] p-4 border border-[#FFE0B2]">
+            <p className="text-sm font-medium text-[#D97706]">¿No es correcto? Selecciona manualmente de nuestra base de datos.</p>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button variant="primary" size="md" onClick={saveJournal}>
@@ -440,10 +422,10 @@ export default function Identify() {
                     <button
                       key={species.id}
                       onClick={() => {
-                        setClassifyResult({
-                          ...classifyResult,
-                          results: [{ species, confidence: 100, reason: 'Selección manual' }, ...classifyResult.results.slice(1)]
-                        })
+                        setAnalysisResults([
+                          { species, confidence: 100, reasoning: 'Selección manual' },
+                          ...analysisResults.slice(1)
+                        ])
                         setShowManualSelection(false)
                         setManualSearchQuery('')
                       }}

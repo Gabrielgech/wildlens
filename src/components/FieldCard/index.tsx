@@ -34,7 +34,18 @@ export default function FieldCard({ species, onClose, mode }: FieldCardProps) {
   const activeSoundType = isPlaying ? currentSoundType : null
 
   return (
-    <div className="field-card max-w-3xl mx-auto text-[#1A3326] shadow-[0_2px_8px_rgba(45,106,79,0.08)] animate-fade-slide-up">
+    <div className="field-card relative max-w-3xl mx-auto text-[#1A3326] shadow-[0_2px_8px_rgba(45,106,79,0.08)] animate-fade-slide-up">
+      {onClose ? (
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+          aria-label="Cerrar"
+        >
+          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      ) : null}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-[22px] font-bold text-[#1A3326]">{species.commonName}</h2>

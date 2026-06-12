@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AudioVisualizer from '../../components/AudioVisualizer'
 import FieldCard from '../../components/FieldCard'
 import { useAudioClassifier } from '../../hooks/useAudioClassifier'
 import { useAudioRecorder } from '../../hooks/useAudioRecorder'
 import { getManualSelectionList } from '../../data/species'
 import type { Species } from '../../types'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, ChevronLeft } from 'lucide-react'
 
 export default function Listen() {
+  const navigate = useNavigate()
   const {
     startRecording,
     stopRecording,
@@ -51,6 +53,12 @@ export default function Listen() {
 
   return (
     <div className="min-h-screen p-4 bg-[#F8FBF0]">
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-green-700 mb-4"
+      >
+        <ChevronLeft size={20} /> Regresar
+      </button>
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="rounded-[2rem] border border-[#C8E6C9] bg-white p-6 shadow-[0_2px_8px_rgba(45,106,79,0.08)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -167,15 +175,9 @@ export default function Listen() {
       </div>
 
       {selectedSpecies ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="relative w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#0b1220] p-6 shadow-2xl">
-            <button
-              className="absolute right-5 top-5 rounded-full bg-white/5 px-3 py-2 text-sm text-white transition hover:bg-white/10"
-              onClick={() => setSelectedSpecies(null)}
-            >
-              Cerrar
-            </button>
-            <FieldCard species={selectedSpecies} mode="fauna" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setSelectedSpecies(null)}>
+          <div className="relative w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/10 bg-[#0b1220] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <FieldCard species={selectedSpecies} mode="fauna" onClose={() => setSelectedSpecies(null)} />
           </div>
         </div>
       ) : null}
